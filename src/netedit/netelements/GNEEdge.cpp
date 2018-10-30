@@ -783,7 +783,7 @@ GNEEdge::removeEdgeOfAdditionalParents(GNEUndoList* undoList) {
     while (myFirstAdditionalParents.size() > 0) {
         // Obtain attribute Edge or Edges of additional
         std::vector<std::string> edgeIDs;
-        if(GNEAttributeCarrier::getTagProperties(myFirstAdditionalParents.front()->getTag()).hasAttribute(SUMO_ATTR_EDGES)) {
+        if(GNEAttributeCarrier::getTagProperties(myFirstAdditionalParents.front()->getTag())->hasAttribute(SUMO_ATTR_EDGES)) {
             edgeIDs = parse<std::vector<std::string> >(myFirstAdditionalParents.front()->getAttribute(SUMO_ATTR_EDGES));
         } else {
             edgeIDs.push_back(myFirstAdditionalParents.front()->getAttribute(SUMO_ATTR_EDGE));

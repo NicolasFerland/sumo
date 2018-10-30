@@ -831,7 +831,7 @@ GNETAZFrame::buildShape() {
 
 
 void 
-GNETAZFrame::enableModuls(const GNEAttributeCarrier::TagValues &/*tagValue*/) {
+GNETAZFrame::enableModuls(GNEAttributeCarrier::TagValues* /*tagValue*/) {
 
 }
 

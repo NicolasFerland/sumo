@@ -124,7 +124,7 @@ GNEAdditionalFrame::AdditionalAttributeSingle::showAdditionalAttribute(SumoXMLAt
     myLabel->setText(toString(myAdditionalAttr).c_str());
     myLabel->show();
     // Retrieve attribute properties
-    const auto& attributeProperties = GNEAttributeCarrier::getTagProperties(myAdditionalAttributesParent->myAdditionalFrameParent->myItemSelector->getCurrentTypeTag()).getAttribute(additionalAttr);
+    const auto& attributeProperties = GNEAttributeCarrier::getTagProperties(myAdditionalAttributesParent->myAdditionalFrameParent->myItemSelector->getCurrentTypeTag())->getAttribute(additionalAttr);
     if (attributeProperties.isInt()) {
         myTextFieldInt->setTextColor(FXRGB(0, 0, 0));
         myTextFieldInt->setText(toString(value).c_str());
@@ -172,7 +172,7 @@ GNEAdditionalFrame::AdditionalAttributeSingle::getAttr() const {
 std::string
 GNEAdditionalFrame::AdditionalAttributeSingle::getValue() const {
     // obtain attribute property (only for improve code legibility)
-    const auto& attrValue = GNEAttributeCarrier::getTagProperties(myAdditionalAttributesParent->myAdditionalFrameParent->myItemSelector->getCurrentTypeTag()).getAttribute(myAdditionalAttr);
+    const auto& attrValue = GNEAttributeCarrier::getTagProperties(myAdditionalAttributesParent->myAdditionalFrameParent->myItemSelector->getCurrentTypeTag())->getAttribute(myAdditionalAttr);
     // return value depending of attribute type
     if (attrValue.isBool()) {
         return (myBoolCheckButton->getCheck() == 1) ? "true" : "false";
@@ -197,7 +197,7 @@ GNEAdditionalFrame::AdditionalAttributeSingle::onCmdSetAttribute(FXObject*, FXSe
     // We assume that current value is valid
     myInvalidValue = "";
     // get attribute Values (only for improve efficiency)
-    const auto& attrValues = GNEAttributeCarrier::getTagProperties(myAdditionalAttributesParent->myAdditionalFrameParent->myItemSelector->getCurrentTypeTag()).getAttribute(myAdditionalAttr);
+    const auto& attrValues = GNEAttributeCarrier::getTagProperties(myAdditionalAttributesParent->myAdditionalFrameParent->myItemSelector->getCurrentTypeTag())->getAttribute(myAdditionalAttr);
     // Check if format of current value of myTextField is correct
     if (attrValues.isInt()) {
         if (GNEAttributeCarrier::canParse<int>(myTextFieldInt->getText().text())) {
@@ -323,8 +323,8 @@ GNEAdditionalFrame::AdditionalAttributes::clearAttributes() {
 void
 GNEAdditionalFrame::AdditionalAttributes::addAttribute(SumoXMLAttr AdditionalAttributeSingle) {
     // obtain attribute property (only for improve code legibility)
-    const auto& attrvalue = GNEAttributeCarrier::getTagProperties(myAdditionalFrameParent->myItemSelector->getCurrentTypeTag()).getAttribute(AdditionalAttributeSingle);
-    myVectorOfsingleAdditionalParameter.at(attrvalue.getPositionListed())->showAdditionalAttribute(AdditionalAttributeSingle, attrvalue.getDefaultValue());
+    const auto& attrValue = GNEAttributeCarrier::getTagProperties(myAdditionalFrameParent->myItemSelector->getCurrentTypeTag())->getAttribute(AdditionalAttributeSingle);
+    myVectorOfsingleAdditionalParameter.at(attrValue.getPositionListed())->showAdditionalAttribute(AdditionalAttributeSingle, attrValue.getDefaultValue());
 }
 
 
@@ -356,10 +356,11 @@ void
 GNEAdditionalFrame::AdditionalAttributes::showWarningMessage(std::string extra) const {
     std::string errorMessage;
     // iterate over standard parameters
-    for (auto i : GNEAttributeCarrier::getTagProperties(myAdditionalFrameParent->myItemSelector->getCurrentTypeTag())) {
+    auto tagProperties = GNEAttributeCarrier::getTagProperties(myAdditionalFrameParent->myItemSelector->getCurrentTypeTag());
+    for (auto i = tagProperties->begin(); i != tagProperties->end(); i++) {
         if (errorMessage.empty()) {
             // Return string with the error if at least one of the parameter isn't valid
-            std::string attributeValue = myVectorOfsingleAdditionalParameter.at(i.second.getPositionListed())->isAttributeValid();
+            std::string attributeValue = myVectorOfsingleAdditionalParameter.at(i->second.getPositionListed())->isAttributeValid();
             if (attributeValue.size() != 0) {
                 errorMessage = attributeValue;
             }
@@ -382,9 +383,10 @@ GNEAdditionalFrame::AdditionalAttributes::showWarningMessage(std::string extra) 
 bool
 GNEAdditionalFrame::AdditionalAttributes::areCurrentAdditionalAttributesValid() const {
     // iterate over standar parameters
-    for (auto i : GNEAttributeCarrier::getTagProperties(myAdditionalFrameParent->myItemSelector->getCurrentTypeTag())) {
+    auto tagProperties = GNEAttributeCarrier::getTagProperties(myAdditionalFrameParent->myItemSelector->getCurrentTypeTag());
+    for (auto i = tagProperties->begin(); i != tagProperties->end(); i++) {
         // Return false if error message of attriuve isn't empty
-        if (myVectorOfsingleAdditionalParameter.at(i.second.getPositionListed())->isAttributeValid().size() != 0) {
+        if (myVectorOfsingleAdditionalParameter.at(i->second.getPositionListed())->isAttributeValid().size() != 0) {
             return false;
         }
     }
@@ -1072,15 +1074,15 @@ GNEAdditionalFrame::addAdditional(const GNEViewNet::ObjectsUnderCursor &objectsU
     }
 
     // If element owns an additional parent, get id of parent from AdditionalParentSelector
-    if (tagValues.hasParent() && !buildAdditionalWithParent(valuesMap, objectsUnderCursor.additional, tagValues)) {
+    if (tagValues->hasParent() && !buildAdditionalWithParent(valuesMap, objectsUnderCursor.additional, tagValues)) {
         return false;
     }
     // If consecutive Lane Selector is enabled, it means that either we're selecting lanes or we're finished or we'rent started
-    if(tagValues.canBePlacedOverEdge()) {
+    if(tagValues->canBePlacedOverEdge()) {
         return buildAdditionalOverEdge(valuesMap, objectsUnderCursor.lane, tagValues);
-    } else if(tagValues.canBePlacedOverLane()) {
+    } else if(tagValues->canBePlacedOverLane()) {
         return buildAdditionalOverLane(valuesMap, objectsUnderCursor.lane, tagValues);
-    } else if(tagValues.canBePlacedOverLanes()) {
+    } else if(tagValues->canBePlacedOverLanes()) {
         return buildAdditionalOverLanes(valuesMap, objectsUnderCursor.lane, tagValues);
     } else {
         return buildAdditionalOverView(valuesMap, tagValues);
@@ -1118,35 +1120,35 @@ GNEAdditionalFrame::getConsecutiveLaneSelector() const {
 
 
 void 
-GNEAdditionalFrame::enableModuls(const GNEAttributeCarrier::TagValues &tagProperties) {
+GNEAdditionalFrame::enableModuls(const GNEAttributeCarrier::TagValues *tagProperties) {
      // show NeteeditAttributes
     myNeteditAttributes->showNeteditAttributesModul(tagProperties);
     // Clear internal attributes
     myAdditionalAttributes->clearAttributes();
     // iterate over attributes of myCurrentAdditionalType
-    for (auto i : tagProperties) {
+    for (auto i = tagProperties->begin(); i != tagProperties->end(); i++) {
         // only show attributes that aren't uniques
-        if (!i.second.isUnique()) {
-            myAdditionalAttributes->addAttribute(i.first);
+        if (!i->second.isUnique()) {
+            myAdditionalAttributes->addAttribute(i->first);
         }
     }
     // show additional attribute modul
     myAdditionalAttributes->showAdditionalAttributesModul();
     // Show myAdditionalFrameParent if we're adding a additional with parent
-    if (tagProperties.hasParent()) {
-        mySelectorAdditionalParent->showSelectorAdditionalParentModul(tagProperties.getParentTag());
+    if (tagProperties->hasParent()) {
+        mySelectorAdditionalParent->showSelectorAdditionalParentModul(tagProperties->getParentTag());
     } else {
         mySelectorAdditionalParent->hideSelectorAdditionalParentModul();
     }
     // Show SelectorEdgeChilds if we're adding an additional that own the attribute SUMO_ATTR_EDGES
-    if (tagProperties.hasAttribute(SUMO_ATTR_EDGES)) {
+    if (tagProperties->hasAttribute(SUMO_ATTR_EDGES)) {
         mySelectorEdgeChilds->showSelectorEdgeChildsModul();
     } else {
         mySelectorEdgeChilds->hideSelectorEdgeChildsModul();
     }
     // Show SelectorLaneChilds or consecutive lane selector if we're adding an additional that own the attribute SUMO_ATTR_LANES
-    if (tagProperties.hasAttribute(SUMO_ATTR_LANES)) {
-        if(tagProperties.hasParent() && tagProperties.getParentTag() == SUMO_TAG_LANE) {
+    if (tagProperties->hasAttribute(SUMO_ATTR_LANES)) {
+        if(tagProperties->hasParent() && tagProperties->getParentTag() == SUMO_TAG_LANE) {
             // show selector lane parent and hide selector lane child
             mySelectorLaneParents->showSelectorLaneParentsModul();
             mySelectorLaneChilds->hideSelectorLaneChildsModul();
@@ -1196,9 +1198,9 @@ GNEAdditionalFrame::generateID(GNENetElement* netElement) const {
 
 
 bool 
-GNEAdditionalFrame::buildAdditionalWithParent(std::map<SumoXMLAttr, std::string> &valuesMap, GNEAdditional* additionalParent, const GNEAttributeCarrier::TagValues &tagValues) {
+GNEAdditionalFrame::buildAdditionalWithParent(std::map<SumoXMLAttr, std::string> &valuesMap, GNEAdditional* additionalParent, const GNEAttributeCarrier::TagValues *tagValues) {
     // if user click over an additional element parent, mark int in AdditionalParentSelector
-    if (additionalParent && (additionalParent->getTag() == tagValues.getParentTag())) {
+    if (additionalParent && (additionalParent->getTag() == tagValues->getParentTag())) {
         valuesMap[GNE_ATTR_PARENT] = additionalParent->getID();
         mySelectorAdditionalParent->setIDSelected(additionalParent->getID());
     }
@@ -1206,7 +1208,7 @@ GNEAdditionalFrame::buildAdditionalWithParent(std::map<SumoXMLAttr, std::string>
     if (mySelectorAdditionalParent->getIdSelected() != "") {
         valuesMap[GNE_ATTR_PARENT] = mySelectorAdditionalParent->getIdSelected();
     } else {
-        myAdditionalAttributes->showWarningMessage("A " + toString(tagValues.getParentTag()) + " must be selected before insertion of " + toString(myItemSelector->getCurrentTypeTag()) + ".");
+        myAdditionalAttributes->showWarningMessage("A " + toString(tagValues->getParentTag()) + " must be selected before insertion of " + toString(myItemSelector->getCurrentTypeTag()) + ".");
         return false;
     }
     return true;
@@ -1214,9 +1216,9 @@ GNEAdditionalFrame::buildAdditionalWithParent(std::map<SumoXMLAttr, std::string>
 
 
 bool 
-GNEAdditionalFrame::buildAdditionalCommonAttributes(std::map<SumoXMLAttr, std::string> &valuesMap, const GNEAttributeCarrier::TagValues &tagValues) {
+GNEAdditionalFrame::buildAdditionalCommonAttributes(std::map<SumoXMLAttr, std::string> &valuesMap, const GNEAttributeCarrier::TagValues *tagValues) {
     // If additional has a interval defined by a begin or end, check that is valid
-    if (tagValues.hasAttribute(SUMO_ATTR_STARTTIME) && tagValues.hasAttribute(SUMO_ATTR_END)) {
+    if (tagValues->hasAttribute(SUMO_ATTR_STARTTIME) && tagValues->hasAttribute(SUMO_ATTR_END)) {
         double begin = GNEAttributeCarrier::parse<double>(valuesMap[SUMO_ATTR_STARTTIME]);
         double end = GNEAttributeCarrier::parse<double>(valuesMap[SUMO_ATTR_END]);
         if (begin > end) {
@@ -1225,14 +1227,14 @@ GNEAdditionalFrame::buildAdditionalCommonAttributes(std::map<SumoXMLAttr, std::s
         }
     }
     // If additional own the attribute SUMO_ATTR_FILE but was't defined, will defined as <ID>.xml
-    if (tagValues.hasAttribute(SUMO_ATTR_FILE) && valuesMap[SUMO_ATTR_FILE] == "") {
+    if (tagValues->hasAttribute(SUMO_ATTR_FILE) && valuesMap[SUMO_ATTR_FILE] == "") {
         if ((myItemSelector->getCurrentTypeTag() != SUMO_TAG_CALIBRATOR) && (myItemSelector->getCurrentTypeTag() != SUMO_TAG_REROUTER)) {
             // SUMO_ATTR_FILE is optional for calibrators and rerouters (fails to load in sumo when given and the file does not exist)
             valuesMap[SUMO_ATTR_FILE] = (valuesMap[SUMO_ATTR_ID] + ".xml");
         }
     }
     // If element own a list of SelectorEdgeChilds as attribute
-    if (tagValues.hasAttribute(SUMO_ATTR_EDGES) && !tagValues.canBePlacedOverEdges()) {
+    if (tagValues->hasAttribute(SUMO_ATTR_EDGES) && !tagValues->canBePlacedOverEdges()) {
         // obtain edge IDs
         valuesMap[SUMO_ATTR_EDGES] = mySelectorEdgeChilds->getEdgeIdsSelected();
         // check if attribute has at least one edge
@@ -1242,7 +1244,7 @@ GNEAdditionalFrame::buildAdditionalCommonAttributes(std::map<SumoXMLAttr, std::s
         }
     }
     // get values of mySelectorLaneChilds, if tag correspond to an element that has lanes as childs
-    if (tagValues.hasAttribute(SUMO_ATTR_LANES) && !tagValues.canBePlacedOverLanes()) {
+    if (tagValues->hasAttribute(SUMO_ATTR_LANES) && !tagValues->canBePlacedOverLanes()) {
         // obtain lane IDs
         valuesMap[SUMO_ATTR_LANES] = mySelectorLaneChilds->getLaneIdsSelected();
         // check if attribute has at least a lane
@@ -1257,7 +1259,7 @@ GNEAdditionalFrame::buildAdditionalCommonAttributes(std::map<SumoXMLAttr, std::s
 
 
 bool 
-GNEAdditionalFrame::buildAdditionalOverEdge(std::map<SumoXMLAttr, std::string> &valuesMap, GNELane* lane, const GNEAttributeCarrier::TagValues &tagValues) {
+GNEAdditionalFrame::buildAdditionalOverEdge(std::map<SumoXMLAttr, std::string> &valuesMap, GNELane* lane, const GNEAttributeCarrier::TagValues *tagValues) {
     // check that edge exist
     if (lane) {
         // Get attribute lane's edge
@@ -1289,7 +1291,7 @@ GNEAdditionalFrame::buildAdditionalOverEdge(std::map<SumoXMLAttr, std::string> &
 
 
 bool 
-GNEAdditionalFrame::buildAdditionalOverLane(std::map<SumoXMLAttr, std::string> &valuesMap, GNELane* lane, const GNEAttributeCarrier::TagValues &tagValues) {
+GNEAdditionalFrame::buildAdditionalOverLane(std::map<SumoXMLAttr, std::string> &valuesMap, GNELane* lane, const GNEAttributeCarrier::TagValues *tagValues) {
     // check that lane exist
     if (lane) {
         // Get attribute lane
@@ -1302,7 +1304,7 @@ GNEAdditionalFrame::buildAdditionalOverLane(std::map<SumoXMLAttr, std::string> &
     // Obtain position of the mouse over lane (limited over grid)
     double mousePositionOverLane = lane->getShape().nearest_offset_to_point2D(myViewNet->snapToActiveGrid(myViewNet->getPositionInformation())) / lane->getLengthGeometryFactor();
     // Obtain position attribute if wasn't previously set in Frame
-    if (tagValues.hasAttribute(SUMO_ATTR_POSITION) && (valuesMap.find(SUMO_ATTR_POSITION) == valuesMap.end())) {
+    if (tagValues->hasAttribute(SUMO_ATTR_POSITION) && (valuesMap.find(SUMO_ATTR_POSITION) == valuesMap.end())) {
         valuesMap[SUMO_ATTR_POSITION] = toString(mousePositionOverLane);
     }
     // parse common attributes
@@ -1327,7 +1329,7 @@ GNEAdditionalFrame::buildAdditionalOverLane(std::map<SumoXMLAttr, std::string> &
 
 
  bool 
-GNEAdditionalFrame::buildAdditionalOverLanes(std::map<SumoXMLAttr, std::string> &valuesMap, GNELane* lane, const GNEAttributeCarrier::TagValues &tagValues) {
+GNEAdditionalFrame::buildAdditionalOverLanes(std::map<SumoXMLAttr, std::string> &valuesMap, GNELane* lane, const GNEAttributeCarrier::TagValues *tagValues) {
      // stop if lane isn't valid
     if(lane == nullptr) {
         return false;
@@ -1350,11 +1352,11 @@ GNEAdditionalFrame::buildAdditionalOverLanes(std::map<SumoXMLAttr, std::string> 
         }
         valuesMap[SUMO_ATTR_LANES] = joinToString(laneIDs, " ");
         // Check if clicked position over first lane has to be obtained
-        if(tagValues.hasAttribute(SUMO_ATTR_POSITION)) {
+        if(tagValues->hasAttribute(SUMO_ATTR_POSITION)) {
             valuesMap[SUMO_ATTR_POSITION] = toString(mySelectorLaneParents->getSelectedLanes().front().second);
         }
         // Check if clicked position over last lane has to be obtained
-        if(tagValues.hasAttribute(SUMO_ATTR_ENDPOS)) {
+        if(tagValues->hasAttribute(SUMO_ATTR_ENDPOS)) {
             valuesMap[SUMO_ATTR_ENDPOS] = toString(mySelectorLaneParents->getSelectedLanes().back().second);
         }
         // parse common attributes
@@ -1380,11 +1382,11 @@ GNEAdditionalFrame::buildAdditionalOverLanes(std::map<SumoXMLAttr, std::string> 
 
 
 bool
-GNEAdditionalFrame::buildAdditionalOverView(std::map<SumoXMLAttr, std::string> &valuesMap, const GNEAttributeCarrier::TagValues &tagValues) {
+GNEAdditionalFrame::buildAdditionalOverView(std::map<SumoXMLAttr, std::string> &valuesMap, const GNEAttributeCarrier::TagValues *tagValues) {
     // Generate id of element
     valuesMap[SUMO_ATTR_ID] = generateID(nullptr);
     // Obtain position attribute if wasn't previously set in Frame
-    if (tagValues.hasAttribute(SUMO_ATTR_POSITION) && (valuesMap.find(SUMO_ATTR_POSITION) == valuesMap.end())) {
+    if (tagValues->hasAttribute(SUMO_ATTR_POSITION) && (valuesMap.find(SUMO_ATTR_POSITION) == valuesMap.end())) {
         // An attribute "position" can be either a float or a Position. If isn't float, we get the position over map
         valuesMap[SUMO_ATTR_POSITION] = toString(myViewNet->snapToActiveGrid(myViewNet->getPositionInformation()));
     }

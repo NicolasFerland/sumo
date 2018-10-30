@@ -1231,7 +1231,7 @@ GNENet::retrieveAttributeCarriers(SumoXMLTag type) {
         for (auto i : myPOIs) {
             result.push_back(dynamic_cast<GNEPOI*>(i.second));
         }
-    } else if (GNEAttributeCarrier::getTagProperties(type).isAdditional()) {
+    } else if (GNEAttributeCarrier::getTagProperties(type)->isAdditional()) {
         // only returns additionals of a certain type.
         for (auto i : myAttributeCarriers.additionals.at(type)) {
             result.push_back(i.second);
@@ -1883,9 +1883,9 @@ GNENet::saveAdditionals(const std::string& filename) {
     for (auto i : myAttributeCarriers.additionals) {
         for (auto j : i.second) {
             // check if has to be fixed
-            if (GNEAttributeCarrier::getTagProperties(j.second->getTag()).canBePlacedOverLane() && !j.second->isAdditionalValid()) {
+            if (GNEAttributeCarrier::getTagProperties(j.second->getTag())->canBePlacedOverLane() && !j.second->isAdditionalValid()) {
                 invalidSingleLaneAdditionals.push_back(j.second);
-            } else if (GNEAttributeCarrier::getTagProperties(j.second->getTag()).canBePlacedOverLanes() && !j.second->isAdditionalValid()) {
+            } else if (GNEAttributeCarrier::getTagProperties(j.second->getTag())->canBePlacedOverLanes() && !j.second->isAdditionalValid()) {
                 invalidMultiLaneAdditionals.push_back(j.second);
             }
         }
@@ -1955,7 +1955,7 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
     }
     // now write all stoppingPlaces
     for (auto i : myAttributeCarriers.additionals) {
-        if (GNEAttributeCarrier::getTagProperties(i.first).isStoppingPlace()) {
+        if (GNEAttributeCarrier::getTagProperties(i.first)->isStoppingPlace()) {
             for (auto j : i.second) {
                 // only save stoppingPlaces that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
                 if (j.second->getFirstAdditionalParent() == nullptr) {
@@ -1966,7 +1966,7 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
     }
     // now write all detectors
     for (auto i : myAttributeCarriers.additionals) {
-        if (GNEAttributeCarrier::getTagProperties(i.first).isDetector()) {
+        if (GNEAttributeCarrier::getTagProperties(i.first)->isDetector()) {
             for (auto j : i.second) {
                 // only save Detectors that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
                 if (j.second->getFirstAdditionalParent() == nullptr) {
@@ -1978,7 +1978,7 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
     // finally write rest of additionals
     for (auto i : myAttributeCarriers.additionals) {
         const auto& tagValue = GNEAttributeCarrier::getTagProperties(i.first);
-        if (!tagValue.isStoppingPlace() && !tagValue.isDetector() && (i.first != SUMO_TAG_ROUTEPROBE) && (i.first != SUMO_TAG_VTYPE) && (i.first != SUMO_TAG_ROUTE)) {
+        if (!tagValue->isStoppingPlace() && !tagValue->isDetector() && (i.first != SUMO_TAG_ROUTEPROBE) && (i.first != SUMO_TAG_VTYPE) && (i.first != SUMO_TAG_ROUTE)) {
             for (auto j : i.second) {
                 // only save additionals that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
                 if (j.second->getFirstAdditionalParent() == nullptr) {
@@ -2144,7 +2144,7 @@ GNENet::insertAdditional(GNEAdditional* additional) {
     if (myAttributeCarriers.additionals.at(additional->getTag()).count(additional->getID()) == 0) {
         myAttributeCarriers.additionals.at(additional->getTag()).insert(std::make_pair(additional->getID(), additional));
         // only add drawable elements in grid
-        if (additional->getTagProperties(additional->getTag()).isDrawable()) {
+        if (additional->getTagProperties(additional->getTag())->isDrawable()) {
             myGrid.addAdditionalGLObject(additional);
         }
         // check if additional is selected
@@ -2172,7 +2172,7 @@ GNENet::deleteAdditional(GNEAdditional* additional) {
         // Remove from container
         myAttributeCarriers.additionals.at(additional->getTag()).erase(additional->getID());
         // only remove drawable elements of grid
-        if (additional->getTagProperties(additional->getTag()).isDrawable()) {
+        if (additional->getTagProperties(additional->getTag())->isDrawable()) {
             myGrid.removeAdditionalGLObject(additional);
         }
         // check if additional is selected
@@ -2488,7 +2488,7 @@ GNENet::computeAndUpdate(OptionsCont& oc, bool volatileOptions) {
         for (const auto& it : myAttributeCarriers.additionals) {
             for (const auto& j : it.second) {
                 // only remove drawable additionals
-                if (GNEAttributeCarrier::getTagProperties(j.second->getTag()).isDrawable()) {
+                if (GNEAttributeCarrier::getTagProperties(j.second->getTag())->isDrawable()) {
                     myGrid.removeAdditionalGLObject(j.second);
                 }
             }
@@ -2542,7 +2542,7 @@ GNENet::computeAndUpdate(OptionsCont& oc, bool volatileOptions) {
 
 void
 GNENet::replaceInListAttribute(GNEAttributeCarrier* ac, SumoXMLAttr key, const std::string& which, const std::string& by, GNEUndoList* undoList) {
-    assert(GNEAttributeCarrier::getTagProperties(ac->getTag()).getAttribute(key).isList());
+    assert(GNEAttributeCarrier::getTagProperties(ac->getTag())->getAttribute(key).isList());
     std::vector<std::string> values = GNEAttributeCarrier::parse<std::vector<std::string> >(ac->getAttribute(key));
     std::vector<std::string> newValues;
     for (auto v : values) {

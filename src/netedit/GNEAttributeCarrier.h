@@ -247,6 +247,9 @@ public:
         /// @brief parameter constructor
         TagValues(int tagProperty, int &positionListed, GUIIcon icon, SumoXMLTag parentTag = SUMO_TAG_NOTHING, SumoXMLTag tagSynonym = SUMO_TAG_NOTHING);
 
+        /// @brief destructor
+        ~TagValues();
+
         /// @brief check Tag integrity (this include all their attributes)
         void checkTagIntegrity();
 
@@ -475,7 +478,7 @@ public:
     const std::string getID() const;
 
     /// @brief get Tag Properties
-    static const TagValues& getTagProperties(SumoXMLTag tag);
+    static TagValues *getTagProperties(const SumoXMLTag tag);
 
     /// @brief get tags of all editable element types
     static std::vector<SumoXMLTag> allowedTags(bool onlyDrawables);
@@ -555,9 +558,9 @@ public:
     static T parseAttributeFromXML(const SUMOSAXAttributes& attrs, const std::string& objectID, const SumoXMLTag tag, const SumoXMLAttr attribute, bool& abort) {
         bool parsedOk = true;
         // obtain tag properties
-        const auto& tagProperties = getTagProperties(tag);
+        auto tagProperties = getTagProperties(tag);
         // first check if attribute is deprecated
-        if (tagProperties.isAttributeDeprecated(attribute)) {
+        if (tagProperties->isAttributeDeprecated(attribute)) {
             // show warning if deprecateda ttribute is in the SUMOSAXAttributes
             if (attrs.hasAttribute(attribute)) {
                 WRITE_WARNING("Attribute " + toString(attribute) + "' of " + toString(tag) + " is deprecated and will not be loaded.");
@@ -566,7 +569,7 @@ public:
         }
         std::string defaultValue, parsedAttribute;
         // obtain attribute properties (Only for improving efficiency)
-        const auto& attrProperties = tagProperties.getAttribute(attribute);
+        const auto& attrProperties = tagProperties->getAttribute(attribute);
         // set additionalOfWarningMessage
         std::string additionalOfWarningMessage;
         if (objectID != "") {
@@ -750,7 +753,7 @@ public:
                     parsedAttribute = defaultValue;
                 }
             }
-        } else if (tagProperties.canMaskXYZPositions() && (attribute == SUMO_ATTR_POSITION)) {
+        } else if (tagProperties->canMaskXYZPositions() && (attribute == SUMO_ATTR_POSITION)) {
             // if element can mask their XYPosition, then must be extracted X Y coordiantes separeted
             std::string x, y, z;
             // give a default value to parsedAttribute to avoid problem parsing invalid positions
@@ -840,8 +843,24 @@ protected:
     /// @brief boolean to check if this AC is selected (instead of GUIGlObjectStorage)
     bool mySelected;
 
-    /// @brief map with the tags values
-    static std::map<SumoXMLTag, TagValues> myAllowedTags;
+private:
+
+    /// @brief declare a class to check that second member is removed only one time
+    class AllowedTagMap : public std::map<SumoXMLTag, TagValues*> {
+        public:
+            /// @brief constructor
+            AllowedTagMap() : map<SumoXMLTag, TagValues*>() {}
+
+            /// @brief destructor
+            ~AllowedTagMap() {
+                for (auto i : *this) {
+                    delete i.second;
+                }
+            }
+    };
+
+    /// @brief AllowedTagMap with the tags values
+    static AllowedTagMap myAllowedTags;
 
     /// @brief Invalidated copy constructor.
     GNEAttributeCarrier(const GNEAttributeCarrier&) = delete;

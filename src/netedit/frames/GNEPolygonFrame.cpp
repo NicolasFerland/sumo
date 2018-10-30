@@ -206,7 +206,7 @@ GNEPolygonFrame::buildShape() {
 
 
 void 
-GNEPolygonFrame::enableModuls(const GNEAttributeCarrier::TagValues &tagProperties) {
+GNEPolygonFrame::enableModuls(GNEAttributeCarrier::TagValues *tagProperties) {
     // if there are parmeters, show and Recalc groupBox
     myShapeAttributes->showACAttributesModul(myItemSelector->getCurrentTypeTag(), tagProperties);
     // show netedit attributes

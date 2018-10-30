@@ -214,12 +214,12 @@ GNESelectorFrame::handleIDs(const std::vector<GNEAttributeCarrier*>& ACs, Modifi
         // first unselect AC of ACToUnselect and then selects AC of ACToSelect
         myViewNet->getUndoList()->p_begin("selection using rectangle");
         for (auto i : ACToUnselect) {
-            if (GNEAttributeCarrier::getTagProperties(i.second->getTag()).isSelectable()) {
+            if (GNEAttributeCarrier::getTagProperties(i.second->getTag())->isSelectable()) {
                 i.second->setAttribute(GNE_ATTR_SELECTED, "false", myViewNet->getUndoList());
             }
         }
         for (auto i : ACToSelect) {
-            if (GNEAttributeCarrier::getTagProperties(i.second->getTag()).isSelectable()) {
+            if (GNEAttributeCarrier::getTagProperties(i.second->getTag())->isSelectable()) {
                 i.second->setAttribute(GNE_ATTR_SELECTED, "true", myViewNet->getUndoList());
             }
         }
@@ -245,7 +245,7 @@ GNESelectorFrame::getMatches(SumoXMLTag ACTag, SumoXMLAttr ACAttr, char compOp, 
     for (auto it : allACbyTag) {
         if (expr == "") {
             result.push_back(it);
-        } else if (tagValue.hasAttribute(ACAttr) && tagValue.getAttribute(ACAttr).isNumerical()) {
+        } else if (tagValue->hasAttribute(ACAttr) && tagValue->getAttribute(ACAttr).isNumerical()) {
             double acVal;
             std::istringstream buf(it->getAttribute(ACAttr));
             buf >> acVal;
@@ -602,32 +602,32 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBTag(FXObject*, FXSelector, void*) {
     // check that typed-by-user value is correct
     if (myCurrentTag != SUMO_TAG_NOTHING) {
         // obtain tag property (only for improve code legibility)
-        const auto& tagValue = GNEAttributeCarrier::getTagProperties(myCurrentTag);
+        auto tagValue = GNEAttributeCarrier::getTagProperties(myCurrentTag);
         // set color and enable items
         myMatchTagComboBox->setTextColor(FXRGB(0, 0, 0));
         myMatchAttrComboBox->enable();
         myMatchString->enable();
         myMatchAttrComboBox->clearItems();
         // fill attribute combo box
-        for (auto it : tagValue) {
-            myMatchAttrComboBox->appendItem(toString(it.first).c_str());
+        for (auto it = tagValue->begin(); it != tagValue->end(); it++) {
+            myMatchAttrComboBox->appendItem(toString(it->first).c_str());
         }
         // Add extra attribute "generic"
         myMatchAttrComboBox->appendItem(toString(GNE_ATTR_GENERIC).c_str());
         // check if item can block movement
-        if (tagValue.canBlockMovement()) {
+        if (tagValue->canBlockMovement()) {
             myMatchAttrComboBox->appendItem(toString(GNE_ATTR_BLOCK_MOVEMENT).c_str());
         }
         // check if item can block shape
-        if (tagValue.canBlockShape()) {
+        if (tagValue->canBlockShape()) {
             myMatchAttrComboBox->appendItem(toString(GNE_ATTR_BLOCK_SHAPE).c_str());
         }
         // check if item can close shape
-        if (tagValue.canCloseShape()) {
+        if (tagValue->canCloseShape()) {
             myMatchAttrComboBox->appendItem(toString(GNE_ATTR_CLOSE_SHAPE).c_str());
         }
         // check if item can have parent
-        if (tagValue.hasParent()) {
+        if (tagValue->hasParent()) {
             myMatchAttrComboBox->appendItem(toString(GNE_ATTR_PARENT).c_str());
         }
         // @ToDo: Here can be placed a button to set the default value
@@ -646,29 +646,29 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBTag(FXObject*, FXSelector, void*) {
 
 long
 GNESelectorFrame::MatchAttribute::onCmdSelMBAttribute(FXObject*, FXSelector, void*) {
-    // first obtain a copy of item attributes vinculated with current tag
-    auto tagPropertiesCopy = GNEAttributeCarrier::getTagProperties(myCurrentTag);
+    // first obtain a COPY of item attributes vinculated with current tag
+    auto tagPropertiesCopy = *GNEAttributeCarrier::getTagProperties(myCurrentTag);
     // obtain tag property (only for improve code legibility)
     const auto& tagValue = GNEAttributeCarrier::getTagProperties(myCurrentTag);
     // add an extra AttributeValues to allow select ACs using as criterium "generic parameters"
     tagPropertiesCopy.addAttribute(GNE_ATTR_GENERIC, GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_STRING, "", "");
     // add extra attribute if item can block movement
-    if (tagValue.canBlockMovement()) {
+    if (tagValue->canBlockMovement()) {
         // add an extra AttributeValues to allow select ACs using as criterium "block movement"
         tagPropertiesCopy.addAttribute(GNE_ATTR_BLOCK_MOVEMENT, GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_BOOL, "", "false");
     }
     // add extra attribute if item can block shape
-    if (tagValue.canBlockShape()) {
+    if (tagValue->canBlockShape()) {
         // add an extra AttributeValues to allow select ACs using as criterium "block shape"
         tagPropertiesCopy.addAttribute(GNE_ATTR_BLOCK_SHAPE, GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_BOOL, "", "false");
     }
     // add extra attribute if item can close shape
-    if (tagValue.canCloseShape()) {
+    if (tagValue->canCloseShape()) {
         // add an extra AttributeValues to allow select ACs using as criterium "close shape"
         tagPropertiesCopy.addAttribute(GNE_ATTR_CLOSE_SHAPE, GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_BOOL, "", "true");
     }
     // add extra attribute if item can have parent
-    if (tagValue.hasParent()) {
+    if (tagValue->hasParent()) {
         // add an extra AttributeValues to allow select ACs using as criterium "parent"
         tagPropertiesCopy.addAttribute(GNE_ATTR_PARENT, GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_STRING, "", "");
     }
@@ -700,7 +700,7 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBString(FXObject*, FXSelector, void*)
     if (expr == "") {
         // the empty expression matches all objects
         mySelectorFrameParent->handleIDs(mySelectorFrameParent->getMatches(myCurrentTag, myCurrentAttribute, '@', 0, expr));
-    } else if (tagValue.hasAttribute(myCurrentAttribute) && tagValue.getAttribute(myCurrentAttribute).isNumerical()) {
+    } else if (tagValue->hasAttribute(myCurrentAttribute) && tagValue->getAttribute(myCurrentAttribute).isNumerical()) {
         // The expression must have the form
         //  <val matches if attr < val
         //  >val matches if attr > val
@@ -966,7 +966,7 @@ GNESelectorFrame::SelectionOperation::onCmdInvert(FXObject*, FXSelector, void*) 
     // select additionals
     std::vector<GNEAdditional*> additionals = mySelectorFrameParent->getViewNet()->getNet()->retrieveAdditionals();
     for (auto i : additionals) {
-        if (GNEAttributeCarrier::getTagProperties(i->getTag()).isSelectable()) {
+        if (GNEAttributeCarrier::getTagProperties(i->getTag())->isSelectable()) {
             i->setAttribute(GNE_ATTR_SELECTED, "true", mySelectorFrameParent->getViewNet()->getUndoList());
         }
     }

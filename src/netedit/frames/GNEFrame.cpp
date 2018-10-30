@@ -449,7 +449,7 @@ GNEFrame::ACAttributes::~ACAttributes() {
 
 
 void
-GNEFrame::ACAttributes::showACAttributesModul(const SumoXMLTag currentTag, const GNEAttributeCarrier::TagValues &tagProperties) {
+GNEFrame::ACAttributes::showACAttributesModul(const SumoXMLTag currentTag, GNEAttributeCarrier::TagValues *tagProperties) {
     // get current tag Properties
     myCurrentTag = currentTag;
     myTagProperties = tagProperties;
@@ -458,8 +458,8 @@ GNEFrame::ACAttributes::showACAttributesModul(const SumoXMLTag currentTag, const
         myVectorOfsingleShapeParameter.at(i)->hideParameter();
     }
     // iterate over tag attributes and show it
-    for (auto i : myTagProperties) {
-        myVectorOfsingleShapeParameter.at(i.second.getPositionListed())->showParameter(i.first, i.second, i.second.getDefaultValue());
+    for (auto i = myTagProperties->begin(); i != myTagProperties->end(); i++) {
+        myVectorOfsingleShapeParameter.at(i->second.getPositionListed())->showParameter(i->first, i->second, i->second.getDefaultValue());
     }
     recalc();
     show();
@@ -489,10 +489,10 @@ void
 GNEFrame::ACAttributes::showWarningMessage(std::string extra) const {
     std::string errorMessage;
     // iterate over standar parameters
-    for (auto i : myTagProperties) {
+    for (auto i = myTagProperties->begin(); i != myTagProperties->end(); i++) {
         if (errorMessage.empty()) {
             // Return string with the error if at least one of the parameter isn't valid
-            std::string attributeValue = myVectorOfsingleShapeParameter.at(i.second.getPositionListed())->isAttributeValid();
+            std::string attributeValue = myVectorOfsingleShapeParameter.at(i->second.getPositionListed())->isAttributeValid();
             if (attributeValue.size() != 0) {
                 errorMessage = attributeValue;
             }
@@ -515,9 +515,9 @@ GNEFrame::ACAttributes::showWarningMessage(std::string extra) const {
 bool
 GNEFrame::ACAttributes::areValuesValid() const {
     // iterate over standar parameters
-    for (auto i : myTagProperties) {
+    for (auto i = myTagProperties->begin(); i != myTagProperties->end(); i++) {
         // Return false if error message of attriuve isn't empty
-        if (myVectorOfsingleShapeParameter.at(i.second.getPositionListed())->isAttributeValid().size() != 0) {
+        if (myVectorOfsingleShapeParameter.at(i->second.getPositionListed())->isAttributeValid().size() != 0) {
             return false;
         }
     }
@@ -777,20 +777,20 @@ GNEFrame::ACHierarchy::showAttributeCarrierParents() {
             // obtain tag property (only for improve code legibility)
             const auto& tagValue = GNEAttributeCarrier::getTagProperties(myAC->getTag());
             // check if is an additional or a TAZ, and in other case return nullptr
-            if (tagValue.isAdditional() || tagValue.isTAZ()) {
+            if (tagValue->isAdditional() || tagValue->isTAZ()) {
                 // Obtain Additional
                 GNEAdditional* additional = myFrameParent->getViewNet()->getNet()->retrieveAdditional(myAC->getTag(), myAC->getID(), false);
                 if (additional) {
                     // first check if additional has another additional as parent (to add it into root)
-                    if (tagValue.hasParent() && tagValue.getParentTag() != SUMO_TAG_LANE) {
-                        GNEAdditional* additionalParent = myFrameParent->getViewNet()->getNet()->retrieveAdditional(tagValue.getParentTag(), additional->getAttribute(GNE_ATTR_PARENT));
+                    if (tagValue->hasParent() && tagValue->getParentTag() != SUMO_TAG_LANE) {
+                        GNEAdditional* additionalParent = myFrameParent->getViewNet()->getNet()->retrieveAdditional(tagValue->getParentTag(), additional->getAttribute(GNE_ATTR_PARENT));
                         // create additional parent item
                         FXTreeItem* additionalParentItem = myTreelist->insertItem(nullptr, nullptr, additionalParent->getHierarchyName().c_str(), additionalParent->getIcon(), additionalParent->getIcon());
                         additionalParentItem->setExpanded(true);
                         // Save it in myTreeItemToACMap
                         myTreeItemToACMap[additionalParentItem] = additionalParent;
                     }
-                    if (tagValue.hasAttribute(SUMO_ATTR_EDGE)) {
+                    if (tagValue->hasAttribute(SUMO_ATTR_EDGE)) {
                         // obtain edge parent
                         GNEEdge* edge = myFrameParent->getViewNet()->getNet()->retrieveEdge(additional->getAttribute(SUMO_ATTR_EDGE));
                         //inser Junctions of lane of edge in tree (Pararell because a edge has always two Junctions)
@@ -806,7 +806,7 @@ GNEFrame::ACHierarchy::showAttributeCarrierParents() {
                         myTreeItemToACMap[edgeItem] = edge;
                         // return edge item
                         return edgeItem;
-                    } else if (tagValue.hasAttribute(SUMO_ATTR_LANE)) {
+                    } else if (tagValue->hasAttribute(SUMO_ATTR_LANE)) {
                         // obtain lane parent
                         GNELane* lane = myFrameParent->getViewNet()->getNet()->retrieveLane(additional->getAttribute(SUMO_ATTR_LANE));
                         // obtain edge parent
@@ -828,7 +828,7 @@ GNEFrame::ACHierarchy::showAttributeCarrierParents() {
                         myTreeItemToACMap[laneItem] = lane;
                         // return lane item
                         return laneItem;
-                    } else if (tagValue.hasAttribute(SUMO_ATTR_LANES)) {
+                    } else if (tagValue->hasAttribute(SUMO_ATTR_LANES)) {
                         // obtain lane parent
                         std::vector<GNELane*> lanes = GNEAttributeCarrier::parse<std::vector<GNELane*> >(myFrameParent->getViewNet()->getNet(), additional->getAttribute(SUMO_ATTR_LANES));
                         // obtain edge parent
@@ -943,7 +943,7 @@ GNEFrame::ACHierarchy::showAttributeCarrierChilds(GNEAttributeCarrier* AC, FXTre
         }
         default: {
             // check if is an additional or TAZ
-            if (GNEAttributeCarrier::getTagProperties(AC->getTag()).isAdditional() || GNEAttributeCarrier::getTagProperties(AC->getTag()).isTAZ()) {
+            if (GNEAttributeCarrier::getTagProperties(AC->getTag())->isAdditional() || GNEAttributeCarrier::getTagProperties(AC->getTag())->isTAZ()) {
                 // retrieve additional
                 GNEAdditional* additional = myFrameParent->getViewNet()->getNet()->retrieveAdditional(AC->getTag(), AC->getID(), false);
                 if (additional) {
@@ -1363,11 +1363,11 @@ GNEFrame::NeteditAttributes::~NeteditAttributes() {}
 
 
 void
-GNEFrame::NeteditAttributes::showNeteditAttributesModul(const GNEAttributeCarrier::TagValues& tagValue) {
+GNEFrame::NeteditAttributes::showNeteditAttributesModul(const GNEAttributeCarrier::TagValues *tagValue) {
     // we assume that frame will not be show
     bool showFrame = false;
     // check if lenght text field has to be showed
-    if(tagValue.canMaskStartEndPos()) {
+    if(tagValue->canMaskStartEndPos()) {
         myLengthLabel->show();
         myLengthTextField->show();
         myReferencePointMatchBox->show();
@@ -1378,7 +1378,7 @@ GNEFrame::NeteditAttributes::showNeteditAttributesModul(const GNEAttributeCarrie
         myReferencePointMatchBox->hide();
     }
     // check if block movement check button has to be show
-    if (tagValue.canBlockMovement()) {
+    if (tagValue->canBlockMovement()) {
         myBlockMovementLabel->show();
         myBlockMovementCheckButton->show();
         showFrame = true;
@@ -1387,7 +1387,7 @@ GNEFrame::NeteditAttributes::showNeteditAttributesModul(const GNEAttributeCarrie
         myBlockMovementCheckButton->hide();
     }
     // check if block shape check button has to be show
-    if (tagValue.canBlockShape()) {
+    if (tagValue->canBlockShape()) {
         myBlockShapeLabel->show();
         myBlockShapeCheckButton->show();
         showFrame = true;
@@ -1396,7 +1396,7 @@ GNEFrame::NeteditAttributes::showNeteditAttributesModul(const GNEAttributeCarrie
         myBlockShapeCheckButton->hide();
     }
     // check if close shape check button has to be show
-    if (tagValue.canCloseShape()) {
+    if (tagValue->canCloseShape()) {
         myClosePolygonLabel->show();
         myCloseShapeCheckButton->show();
         showFrame = true;
@@ -1724,7 +1724,7 @@ GNEFrame::buildShape() {
 
 
 void 
-GNEFrame::enableModuls(const GNEAttributeCarrier::TagValues&) {
+GNEFrame::enableModuls(const GNEAttributeCarrier::TagValues*) {
     // this function has to be reimplemente in all child frames that uses a ItemSelector modul
 }
 
@@ -1741,12 +1741,12 @@ GNEFrame::openHelpAttributesDialog(SumoXMLTag elementTag) const {
     // Create FXTable
     FXTable* myTable = new FXTable(attributesHelpDialog, attributesHelpDialog, MID_TABLE, GUIDesignTableNotEditable);
     attributesHelpDialog->setIcon(GUIIconSubSys::getIcon(ICON_MODEINSPECT));
-    const auto& attrs = GNEAttributeCarrier::getTagProperties(elementTag);
+    auto tagProperties = GNEAttributeCarrier::getTagProperties(elementTag);
     int sizeColumnDescription = 0;
     int sizeColumnDefinitions = 0;
-    myTable->setVisibleRows((FXint)(attrs.getNumberOfAttributes()));
+    myTable->setVisibleRows((FXint)(tagProperties->getNumberOfAttributes()));
     myTable->setVisibleColumns(3);
-    myTable->setTableSize((FXint)(attrs.getNumberOfAttributes()), 3);
+    myTable->setTableSize((FXint)(tagProperties->getNumberOfAttributes()), 3);
     myTable->setBackColor(FXRGB(255, 255, 255));
     myTable->setColumnText(0, "Attribute");
     myTable->setColumnText(1, "Description");
@@ -1754,22 +1754,22 @@ GNEFrame::openHelpAttributesDialog(SumoXMLTag elementTag) const {
     myTable->getRowHeader()->setWidth(0);
     // Iterate over vector of additional parameters
     int itemIndex = 0;
-    for (auto i : attrs) {
+    for (auto i = tagProperties->begin(); i != tagProperties->end(); i++) {
         // Set attribute
-        FXTableItem* attribute = new FXTableItem(toString(i.first).c_str());
+        FXTableItem* attribute = new FXTableItem(toString(i->first).c_str());
         attribute->setJustify(FXTableItem::CENTER_X);
         myTable->setItem(itemIndex, 0, attribute);
         // Set description of element
         FXTableItem* type = new FXTableItem("");
-        type->setText(i.second.getDescription().c_str());
-        sizeColumnDescription = MAX2(sizeColumnDescription, (int)i.second.getDescription().size());
+        type->setText(i->second.getDescription().c_str());
+        sizeColumnDescription = MAX2(sizeColumnDescription, (int)i->second.getDescription().size());
         type->setJustify(FXTableItem::CENTER_X);
         myTable->setItem(itemIndex, 1, type);
         // Set definition
-        FXTableItem* definition = new FXTableItem(i.second.getDefinition().c_str());
+        FXTableItem* definition = new FXTableItem(i->second.getDefinition().c_str());
         definition->setJustify(FXTableItem::LEFT);
         myTable->setItem(itemIndex, 2, definition);
-        sizeColumnDefinitions = MAX2(sizeColumnDefinitions, (int)i.second.getDefinition().size());
+        sizeColumnDefinitions = MAX2(sizeColumnDefinitions, (int)i->second.getDefinition().size());
         itemIndex++;
     }
     // set header
@@ -1789,7 +1789,7 @@ GNEFrame::openHelpAttributesDialog(SumoXMLTag elementTag) const {
     new FXButton(myHorizontalFrameOKButton, "OK\t\tclose", GUIIconSubSys::getIcon(ICON_ACCEPT), attributesHelpDialog, FXDialogBox::ID_ACCEPT, GUIDesignButtonOK);
     new FXHorizontalFrame(myHorizontalFrameOKButton, GUIDesignAuxiliarHorizontalFrame);
     // Write Warning in console if we're in testing mode
-    WRITE_DEBUG("Opening HelpAttributes dialog for tag '" + toString(elementTag) + "' showing " + toString(attrs.getNumberOfAttributes()) + " attributes");
+    WRITE_DEBUG("Opening HelpAttributes dialog for tag '" + toString(elementTag) + "' showing " + toString(tagProperties->getNumberOfAttributes()) + " attributes");
     // create Dialog
     attributesHelpDialog->create();
     // show in the given position

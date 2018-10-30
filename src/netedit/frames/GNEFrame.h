@@ -114,10 +114,10 @@ public:
         /// @brief hide all parameters
         void hideParameter();
 
-        /// @brief return Attr
+        /// @brief return current edited attribute
         SumoXMLAttr getAttr() const;
 
-        /// @brief return value
+        /// @brief return current edited value
         std::string getValue() const;
 
         /// @brief returns a empty string if current value is valid, a string with information about invalid value in other case
@@ -193,7 +193,7 @@ public:
         ~ACAttributes();
 
         /// @brief show ACAttributes modul
-        void showACAttributesModul(const SumoXMLTag currentTag, const GNEAttributeCarrier::TagValues &myTagProperties);
+        void showACAttributesModul(const SumoXMLTag currentTag, GNEAttributeCarrier::TagValues *tagProperties);
 
         /// @brief hide group box
         void hideACAttributesModul();
@@ -226,7 +226,7 @@ public:
 
         SumoXMLTag myCurrentTag;
 
-        GNEAttributeCarrier::TagValues myTagProperties;
+        GNEAttributeCarrier::TagValues *myTagProperties;
 
         /// @brief vector with the shape parameters
         std::vector<ACAttributeRow*> myVectorOfsingleShapeParameter;
@@ -473,7 +473,7 @@ public:
         ~NeteditAttributes();
 
         /// @brief show Netedit attributes modul
-        void showNeteditAttributesModul(const GNEAttributeCarrier::TagValues& tagValue);
+        void showNeteditAttributesModul(const GNEAttributeCarrier::TagValues *tagValue);
 
         /// @brief hide Netedit attributes modul
         void hideNeteditAttributesModul();
@@ -595,7 +595,7 @@ protected:
     virtual bool buildShape();
 
      /// @brief enable moduls depending of item selected in ItemSelector (can be reimplemented in frame childs)
-    virtual void enableModuls(const GNEAttributeCarrier::TagValues &tagProperties);
+    virtual void enableModuls(const GNEAttributeCarrier::TagValues *tagProperties);
 
     /// @brief disable moduls if element selected in itemSelector isn't valid (can be reimplemented in frame childs)
     virtual void disableModuls();

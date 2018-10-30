@@ -230,16 +230,16 @@ GNEViewNet::ObjectsUnderCursor::updateObjectUnderCursor(GUIGlID glIDObject, GNEP
         // obtain tag property (only for improve code legibility)
         const auto& tagValue = GNEAttributeCarrier::getTagProperties(attributeCarrier->getTag());
         // check if attributeCarrier can be casted into netElement, additional or shape
-        if (tagValue.isNetElement()) {
+        if (tagValue->isNetElement()) {
             // cast netElement from attribute carrier
             netElement = dynamic_cast<GNENetElement*>(attributeCarrier);
-        } else if (tagValue.isAdditional()) {
+        } else if (tagValue->isAdditional()) {
             // cast additional element from attribute carrier
             additional = dynamic_cast<GNEAdditional*>(attributeCarrier);
-        } else if (tagValue.isShape()) {
+        } else if (tagValue->isShape()) {
             // cast shape element from attribute carrier
             shape = dynamic_cast<GNEShape*>(attributeCarrier);
-        } else if (tagValue.isTAZ()) {
+        } else if (tagValue->isTAZ()) {
             // cast TAZ element from attribute carrier
             taz = dynamic_cast<GNETAZ*>(attributeCarrier);
         } else {
@@ -1389,7 +1389,7 @@ GNEViewNet::hotkeyEnter() {
         if (myEditShapePoly != nullptr) {
             myUndoList->p_begin("custom " + toString(myEditShapePoly->getShapeEditedElement()->getTag()) + " shape");
             SumoXMLAttr attr = SUMO_ATTR_SHAPE;
-            if (GNEAttributeCarrier::getTagProperties(myEditShapePoly->getShapeEditedElement()->getTag()).hasAttribute(SUMO_ATTR_CUSTOMSHAPE)) {
+            if (GNEAttributeCarrier::getTagProperties(myEditShapePoly->getShapeEditedElement()->getTag())->hasAttribute(SUMO_ATTR_CUSTOMSHAPE)) {
                 attr = SUMO_ATTR_CUSTOMSHAPE;
             }
             myEditShapePoly->getShapeEditedElement()->setAttribute(attr, toString(myEditShapePoly->getShape()), myUndoList);
@@ -2200,7 +2200,7 @@ GNEViewNet::onCmdOpenAdditionalDialog(FXObject*, FXSelector, void*) {
     // retrieve additional under cursor
     GNEAdditional* addtional = getAdditionalAtPopupPosition();
     // check if additional can open dialog
-    if (addtional && GNEAttributeCarrier::getTagProperties(addtional->getTag()).hasDialog()) {
+    if (addtional && GNEAttributeCarrier::getTagProperties(addtional->getTag())->hasDialog()) {
         addtional->openAdditionalDialog();
     }
     return 1;
@@ -3258,7 +3258,7 @@ GNEViewNet::SelectingArea::processBoundarySelection(GNEViewNet* viewNet, Boundar
                 i->setAttribute(GNE_ATTR_SELECTED, "0", viewNet->myUndoList);
             }
             for (auto i : ACToSelect) {
-                if (GNEAttributeCarrier::getTagProperties(i->getTag()).isSelectable()) {
+                if (GNEAttributeCarrier::getTagProperties(i->getTag())->isSelectable()) {
                     i->setAttribute(GNE_ATTR_SELECTED, "1", viewNet->myUndoList);
                 }
             }

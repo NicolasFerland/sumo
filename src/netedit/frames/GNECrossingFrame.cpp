@@ -232,7 +232,7 @@ GNECrossingFrame::CrossingParameters::~CrossingParameters() {}
 void
 GNECrossingFrame::CrossingParameters::enableCrossingParameters(bool hasTLS) {
     // obtain Tag Values
-    const auto& tagProperties = GNEAttributeCarrier::getTagProperties(SUMO_TAG_CROSSING);
+    auto tagProperties = GNEAttributeCarrier::getTagProperties(SUMO_TAG_CROSSING);
     // Enable all elements of the crossing frames
     myCrossingEdgesLabel->enable();
     myCrossingEdges->enable();
@@ -248,8 +248,8 @@ GNECrossingFrame::CrossingParameters::enableCrossingParameters(bool hasTLS) {
     // set values of parameters
     onCmdSetAttribute(nullptr, 0, nullptr);
     myCrossingPriorityCheckButton->setCheck(hasTLS ? true :
-                                            GNEAttributeCarrier::parse<bool>(tagProperties.getDefaultValue(SUMO_ATTR_PRIORITY)));
-    myCrossingWidth->setText(tagProperties.getDefaultValue(SUMO_ATTR_WIDTH).c_str());
+                                            GNEAttributeCarrier::parse<bool>(tagProperties->getDefaultValue(SUMO_ATTR_PRIORITY)));
+    myCrossingWidth->setText(tagProperties->getDefaultValue(SUMO_ATTR_WIDTH).c_str());
     myCrossingWidth->setTextColor(FXRGB(0, 0, 0));
 }
 
